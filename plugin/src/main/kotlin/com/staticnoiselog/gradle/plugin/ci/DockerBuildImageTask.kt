@@ -17,7 +17,7 @@ abstract class DockerBuildImageTask : DockerTask() {
 
     @TaskAction
     override fun exec() {
-        workingDir = dockerBuildImageWorkingDir
+        workingDir = dockerBuildImageWorkingDir!!
 
         val jarTaskCollection: TaskCollection<Jar> = project.tasks.withType(Jar::class.java)
         val jarTask = jarTaskCollection.findByName(JavaPlugin.JAR_TASK_NAME)
