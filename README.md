@@ -66,7 +66,7 @@ Instead, they can add this plugin to the Gradle build script and store the requi
 Maven repository in their `$HOME/.gradle/gradle.properties` file.
 
 In an ideal scenario, developers would just use this plugin and never add additional repositories for resolving project
-dependencies because the custom Maven repository of their corporation provides everything they need.
+dependencies because their corporation's custom Maven repository provides everything they need.
 
 Four values can be configured for the custom Maven repository:
 1. name (default is "CI Plugin Maven Repository")

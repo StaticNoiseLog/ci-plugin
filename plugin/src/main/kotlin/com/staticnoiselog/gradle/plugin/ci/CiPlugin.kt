@@ -130,7 +130,7 @@ class CiPlugin : Plugin<Project> {
             DOCKER_REMOVE_IMAGE_TASK_NAME, DockerRemoveImageTask::class.java
         ) { dockerRemoveImageTask ->
             dockerRemoveImageTask.description =
-                "Issues a 'docker rmi' command for the Docker image created with the ${DOCKER_BUILD_IMAGE_TASK_NAME} task."
+                "Issues a 'docker rmi' command for the Docker image created with the $DOCKER_BUILD_IMAGE_TASK_NAME task."
             dockerRemoveImageTask.group = CI_PLUGIN_TASK_GROUP
             dockerRemoveImageTask.dockerBuildImageWorkingDir = File(dockerBuildImageWorkingDir)
             dockerRemoveImageTask.getImageIdFile().set(File(dockerBuildImageWorkingDir, DOCKER_IMAGE_ID_FILENAME))
