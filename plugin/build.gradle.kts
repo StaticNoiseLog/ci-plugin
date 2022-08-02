@@ -1,4 +1,4 @@
-group = "com.staticnoiselog.gradle"
+group = "io.github.staticnoiselog"
 
 plugins {
     // Apply the Java Gradle plugin development plugin to add support for developing Gradle plugins
