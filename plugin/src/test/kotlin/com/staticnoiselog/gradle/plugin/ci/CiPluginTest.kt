@@ -16,7 +16,7 @@ class CiPluginTest {
     fun `plugin registers tasks`() {
         // Create a test project and apply the plugin
         val project = ProjectBuilder.builder().build()
-        project.plugins.apply("com.staticnoiselog.gradle.plugin.ci")
+        project.plugins.apply("io.github.staticnoiselog.ci")
 
         // Verify the result
         assertNotNull(project.tasks.findByName(DOCKER_PREPARE_CONTEXT_TASK_NAME))

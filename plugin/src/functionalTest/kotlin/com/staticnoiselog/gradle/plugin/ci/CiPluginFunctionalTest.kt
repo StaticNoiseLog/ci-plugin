@@ -24,7 +24,7 @@ class CiPluginFunctionalTest {
     private val plugins = """
     plugins {
         java
-        id("com.staticnoiselog.gradle.plugin.ci")
+        id("io.github.staticnoiselog.ci")
     }
     """
 
@@ -363,7 +363,7 @@ class CiPluginFunctionalTest {
         getBuildFile().writeText(
             """
             plugins {
-                id("com.staticnoiselog.gradle.plugin.ci")
+                id("io.github.staticnoiselog.ci")
             }
             """
         )

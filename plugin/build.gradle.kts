@@ -85,7 +85,7 @@ pluginBundle {
 gradlePlugin {
     plugins {
         create("ciPlugin") {
-            id = "com.staticnoiselog.gradle.plugin.ci"
+            id = "io.github.staticnoiselog.ci"
             displayName = "CI Plugin"
             description = "Gradle plugin providing support for continuous integration"
             implementationClass = "com.staticnoiselog.gradle.plugin.ci.CiPlugin"

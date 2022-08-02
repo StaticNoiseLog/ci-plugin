@@ -27,7 +27,7 @@ Usage
 To use this plugin, add it to the "plugins" section of `build.gradle.kts`:
 ```
 plugins {
-    id("com.staticnoiselog.gradle.plugin.ci") version "1.0.0"
+    id("io.github.staticnoiselog.ci") version "1.0.0"
 }
 ```
 
@@ -215,7 +215,7 @@ project:
 And then refer to that version in the test project that uses the CI plugin:
 
     plugins {
-        id("com.staticnoiselog.gradle.plugin.ci") version "1.2.3"
+        id("io.github.staticnoiselog.ci") version "1.2.3"
     }
 
 Adding New Configuration Values
