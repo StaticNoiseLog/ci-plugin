@@ -27,6 +27,7 @@ abstract class DockerBuildImageTask : DockerTask() {
 
         val dockerImageBaseName =
             "${configuration?.value(CiPluginExtension::dockerRepository)}/${project.group}/${project.name}"
+        val projectVersionShortForm = segmentBeforePlusSign("${project.version}")
 
         commandLine(
             "docker",
@@ -36,7 +37,7 @@ abstract class DockerBuildImageTask : DockerTask() {
             "--build-arg",
             "ARTIFACT_FILE=$fatJarName",
             "-t",
-            "$dockerImageBaseName:${project.version}",
+            "$dockerImageBaseName:$projectVersionShortForm",
             "-t",
             "$dockerImageBaseName:latest",
             "."
@@ -55,4 +56,21 @@ abstract class DockerBuildImageTask : DockerTask() {
  */
 fun stripPlain(providedArtifactPath: String?): String? {
     return providedArtifactPath?.replace("-plain.jar", ".jar")
+}
+
+/**
+ * On Git branches, the semver plugin adds the branch name and the short Git hash to the project version. The separator
+ * used before the Git hash is a plus sign and that is not compatible with "docker build -t name:tag". The Git hash
+ * is also harder to determine in the scripts for the build pipeline. So this function simply removes the first plus
+ * sign and everything that follows.
+ */
+fun segmentBeforePlusSign(s: String?): String? {
+    if (s == null) {
+        return null
+    }
+    val dashIndex = s.indexOf("+")
+    if (dashIndex == -1) {
+        return s
+    }
+    return s.substring(0, dashIndex)
 }

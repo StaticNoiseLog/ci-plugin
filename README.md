@@ -21,6 +21,7 @@ Versions
 - JDK: 11
 - Gradle: 8.0
 - SonarQube plugin: 3.3
+- Kotlin 1.8.10
 
 Usage
 -----
@@ -31,14 +32,34 @@ plugins {
 }
 ```
 
-Your project should be based on JDK 17 or higher, which can be achieved by specifying the [toolchain](https://docs.gradle.org/current/userguide/toolchains.html):
+Your project should be based on JDK 11 or higher, which can be achieved by specifying the [toolchain](https://docs.gradle.org/current/userguide/toolchains.html):
 ```
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(11))
     }
 } 
  ```
+
+### Kotlin Compatibility Issue
+The following exception was observed in a Java project using this plugin:
+
+    Execution failed for task ':compileTestKotlin'.
+    > 'void org.jetbrains.kotlin.incremental.FileUtilsKt.cleanDirectoryContents(java.io.File)'
+
+The Java project itself specified a lower Kotlin version:
+
+    plugins {
+        java
+        kotlin("jvm") version "1.7.0"
+        ...
+
+The solution was to use the same Kotlin version as this plugin, or even better, to remove the Kotlin version
+specification from the Java project:
+
+    plugins {
+        java
+    //    kotlin("jvm") version "1.8.10"
 
 Custom Maven Repository
 -----------------------

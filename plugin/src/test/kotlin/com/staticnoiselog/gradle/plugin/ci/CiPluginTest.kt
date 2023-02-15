@@ -34,6 +34,16 @@ class CiPluginTest {
     }
 
     @Test
+    fun segmentBeforePlusSign() {
+        val expectedJarName = "2.0.56-branch"
+        Assertions.assertNull(segmentBeforePlusSign(null))
+        Assertions.assertEquals("", "")
+        Assertions.assertEquals("%.23k21", "%.23k21")
+        Assertions.assertEquals("1.2.3", "1.2.3")
+        Assertions.assertEquals(expectedJarName, segmentBeforePlusSign("2.0.56-branch+e17a9ffa"))
+    }
+
+    @Test
     fun findInterfaceMembersReturningSpecificType() {
         val ciPluginExtensionPropertyMembers = CiPluginExtension::class.members
             .filterIsInstance<kotlin.reflect.KProperty1<CiPluginExtension, Property<String>>>()
