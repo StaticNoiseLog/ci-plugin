@@ -4,8 +4,8 @@ plugins {
     // Apply the Java Gradle plugin development plugin to add support for developing Gradle plugins
     `java-gradle-plugin`
 
-    // Apply the Kotlin JVM plugin to add support for Kotlin (targeting the JVM)
-    kotlin("jvm") version "1.6.21"
+    // Apply the Kotlin JVM plugin to add support for Kotlin.
+    id("org.jetbrains.kotlin.jvm") version "1.8.10"
 
     // Support for publishing to Maven-style repositories (generate the published metadata for your plugin)
     `maven-publish` // also provides "publishToMavenLocal" for testing with local repo
@@ -35,7 +35,7 @@ dependencies {
 // Toolchain for Kotlin
 kotlin {
     jvmToolchain {
-        (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(17))
+        (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(11))
     }
 }
 
@@ -43,18 +43,18 @@ testing {
     suites {
         // Configure the built-in test suite
         val test by getting(JvmTestSuite::class) {
-            // Use kotlin.test framework
-            useKotlinTest()
+            // Use Kotlin Test test framework
+            useKotlinTest("1.8.10")
         }
 
         // Create a new test suite
         val functionalTest by registering(JvmTestSuite::class) {
-            // Use kotlin.test framework
-            useKotlinTest()
+            // Use Kotlin Test test framework
+            useKotlinTest("1.8.10")
 
             dependencies {
                 // functionalTest test suite depends on the production code in tests
-                implementation(project)
+                implementation(project())
             }
 
             targets {
@@ -75,10 +75,9 @@ tasks.named<Task>("check") {
 }
 
 // Configure the Plugin Publishing Plugin (com.gradle.plugin-publish)
-pluginBundle {
-    website = "https://github.com/StaticNoiseLog/ci-plugin"
-    vcsUrl = "https://github.com/StaticNoiseLog/ci-plugin"
-    tags = listOf("ci", "maven", "jacoco", "sonarqube", "docker")
+gradlePlugin {
+    website.set("https://github.com/StaticNoiseLog/ci-plugin")
+    vcsUrl.set("https://github.com/StaticNoiseLog/ci-plugin")
 }
 
 // plugin information metadata (required for publishing on the Gradle Plugin Portal).
@@ -88,6 +87,7 @@ gradlePlugin {
             id = "io.github.staticnoiselog.ci"
             displayName = "CI Plugin"
             description = "Gradle plugin providing support for continuous integration"
+            tags.set(listOf("ci", "maven", "jacoco", "sonarqube", "docker"))
             implementationClass = "com.staticnoiselog.gradle.plugin.ci.CiPlugin"
         }
     }

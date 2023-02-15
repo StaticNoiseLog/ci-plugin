@@ -18,8 +18,8 @@ pipeline.
 
 Versions
 --------
-- JDK: 17
-- Gradle: 7.5
+- JDK: 11
+- Gradle: 8.0
 - SonarQube plugin: 3.3
 
 Usage
@@ -27,7 +27,7 @@ Usage
 To use this plugin, add it to the "plugins" section of `build.gradle.kts`:
 ```
 plugins {
-    id("io.github.staticnoiselog.ci") version "1.0.0"
+    id("io.github.staticnoiselog.ci") version "1.0.1"
 }
 ```
 

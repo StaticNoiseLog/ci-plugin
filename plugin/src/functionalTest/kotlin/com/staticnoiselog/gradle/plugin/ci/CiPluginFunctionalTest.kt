@@ -2,8 +2,7 @@ package com.staticnoiselog.gradle.plugin.ci
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Rule
-import org.junit.rules.TemporaryFolder
+import org.junit.jupiter.api.io.TempDir
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -52,16 +51,16 @@ class CiPluginFunctionalTest {
         ${PROPERTY_PREFIX}dockerRepository=${PROPERTY_PREFIX}dockerRepository$FROM_GRADLE_PROPERTIES
     """
 
-    @get:Rule
-    val tempFolder = TemporaryFolder()
+    @field:TempDir
+    lateinit var tempFolder: java.nio.file.Path
 
-    private fun getProjectDir() = tempFolder.root
+    private fun getProjectDir() = tempFolder
     private fun getBuildFile() = getProjectDir().resolve("build.gradle.kts")
     private fun getPropertiesFile() = getProjectDir().resolve("gradle.properties")
 
     @Test
     fun `when gradle tasks, then expected tasks available`() {
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
             """
@@ -91,7 +90,7 @@ class CiPluginFunctionalTest {
 
     @Test
     fun `when gradle showCiPluginConfiguration, then default configuration`() {
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
             """
@@ -108,7 +107,7 @@ class CiPluginFunctionalTest {
 
     @Test
     fun `given configuration in build script, when gradle showCiPluginConfiguration, then configuration from build script prevails`() {
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
                 $configurationExtension
@@ -128,12 +127,12 @@ class CiPluginFunctionalTest {
 
     @Test
     fun `given legacy properties in Gradle properties file, when gradle showCiPluginConfiguration, then legacy properties prevail`() {
-        getPropertiesFile().writeText(
+        getPropertiesFile().toFile().writeText(
             """
                 $configurationGradlePropertiesLegacy
             """
         )
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
                 $configurationExtension
@@ -156,13 +155,13 @@ class CiPluginFunctionalTest {
 
     @Test
     fun `given standard and legacy properties in Gradle properties file, when gradle showCiPluginConfiguration, then standard properties prevail`() {
-        getPropertiesFile().writeText(
+        getPropertiesFile().toFile().writeText(
             """
                 $configurationGradlePropertiesLegacy
                 $configurationGradleProperties
             """
         )
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
                 $configurationExtension
@@ -193,12 +192,12 @@ class CiPluginFunctionalTest {
      */
     @Test
     fun `given legacy properties on command line, when gradle showCiPluginConfiguration, then legacy properties from command line prevail`() {
-        getPropertiesFile().writeText(
+        getPropertiesFile().toFile().writeText(
             """
                 $configurationGradlePropertiesLegacy
             """
         )
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
                 $configurationExtension
@@ -228,13 +227,13 @@ class CiPluginFunctionalTest {
 
     @Test
     fun `given all properties on command line, when gradle showCiPluginConfiguration, then standard command line properties prevail`() {
-        getPropertiesFile().writeText(
+        getPropertiesFile().toFile().writeText(
             """
                 $configurationGradlePropertiesLegacy
                 $configurationGradleProperties
             """
         )
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
                 $configurationExtension
@@ -272,7 +271,7 @@ class CiPluginFunctionalTest {
 
     @Test
     fun `given password in build script, when gradle --debug showCiPluginConfiguration, then password from build script prevails`() {
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
                 $configurationExtension
@@ -293,12 +292,12 @@ class CiPluginFunctionalTest {
 
     @Test
     fun `given legacy password in Gradle properties file, when gradle --debug showCiPluginConfiguration, then legacy password prevails`() {
-        getPropertiesFile().writeText(
+        getPropertiesFile().toFile().writeText(
             """
                 $configurationGradlePropertiesLegacy
             """
         )
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
                 $configurationExtension
@@ -324,13 +323,13 @@ class CiPluginFunctionalTest {
 
     @Test
     fun `given legacy and standard password in Gradle properties file, when gradle --debug showCiPluginConfiguration, then standard password prevails`() {
-        getPropertiesFile().writeText(
+        getPropertiesFile().toFile().writeText(
             """
                 $configurationGradlePropertiesLegacy
                 $configurationGradleProperties
             """
         )
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
                 $plugins
                 $configurationExtension
@@ -360,7 +359,7 @@ class CiPluginFunctionalTest {
 
     @Test
     fun `given setup without JAR task, when gradle dockerPrepareContext, then no exception`() {
-        getBuildFile().writeText(
+        getBuildFile().toFile().writeText(
             """
             plugins {
                 id("io.github.staticnoiselog.ci")
@@ -380,7 +379,7 @@ class CiPluginFunctionalTest {
         runner.forwardOutput()
         runner.withPluginClasspath()
         runner.withArguments(arguments.asList())
-        runner.withProjectDir(getProjectDir())
+        runner.withProjectDir(getProjectDir().toFile())
         return runner.build()
     }
 
