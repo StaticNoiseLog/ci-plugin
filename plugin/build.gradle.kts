@@ -11,7 +11,7 @@ plugins {
     `maven-publish` // also provides "publishToMavenLocal" for testing with local repo
 
     // Support for publishing on Gradle Plugin Portal
-    id("com.gradle.plugin-publish") version "1.0.0"
+    id("com.gradle.plugin-publish") version "1.1.0"
 
     // Versioning plugin for this project
     id("ch.fuzzle.gradle.semver") version "1.0.0"
