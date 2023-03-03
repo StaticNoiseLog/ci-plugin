@@ -25,11 +25,8 @@ dependencies {
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
 
-    // so we can apply the SonarQube plugin programmatically
-    implementation("org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.3")
-
     // for JUnit 5 (Jupiter) tests
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
 }
 
 // Toolchain for Kotlin
@@ -43,13 +40,13 @@ testing {
     suites {
         // Configure the built-in test suite
         val test by getting(JvmTestSuite::class) {
-            // Use Kotlin Test test framework
+            // Use Kotlin test framework
             useKotlinTest("1.8.10")
         }
 
         // Create a new test suite
         val functionalTest by registering(JvmTestSuite::class) {
-            // Use Kotlin Test test framework
+            // Use Kotlin test framework
             useKotlinTest("1.8.10")
 
             dependencies {
@@ -87,7 +84,7 @@ gradlePlugin {
             id = "io.github.staticnoiselog.ci"
             displayName = "CI Plugin"
             description = "Gradle plugin providing support for continuous integration"
-            tags.set(listOf("ci", "maven", "jacoco", "sonarqube", "docker"))
+            tags.set(listOf("ci", "maven", "jacoco", "docker"))
             implementationClass = "com.staticnoiselog.gradle.plugin.ci.CiPlugin"
         }
     }

@@ -30,6 +30,8 @@ interface CiPluginExtension {
     val mavenRepositoryUsername: Property<String>
     val mavenRepositoryPassword: Property<String>
     val dockerRepository: Property<String> // repository where Docker images are published
+    val dockerArtifactSourceDirectory: Property<String> // additional source directory for dockerPrepareContext Copy task
+    val dockerArtifactFile: Property<String> // string made available as ARTIFACT_FILE environment variable in Docker image
 }
 
 /**

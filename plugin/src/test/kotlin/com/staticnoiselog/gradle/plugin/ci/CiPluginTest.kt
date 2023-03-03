@@ -34,13 +34,12 @@ class CiPluginTest {
     }
 
     @Test
-    fun segmentBeforePlusSign() {
-        val expectedJarName = "2.0.56-branch"
-        Assertions.assertNull(segmentBeforePlusSign(null))
-        Assertions.assertEquals("", "")
-        Assertions.assertEquals("%.23k21", "%.23k21")
-        Assertions.assertEquals("1.2.3", "1.2.3")
-        Assertions.assertEquals(expectedJarName, segmentBeforePlusSign("2.0.56-branch+e17a9ffa"))
+    fun replaceInvalidDockerTagCharacters() {
+        Assertions.assertNull(replaceInvalidDockerTagCharacters(null))
+        Assertions.assertEquals("", replaceInvalidDockerTagCharacters(""))
+        Assertions.assertEquals("1.2.3", replaceInvalidDockerTagCharacters("1.2.3"))
+        Assertions.assertEquals("_.23k21", replaceInvalidDockerTagCharacters("%.23k21"))
+        Assertions.assertEquals("2.0.56-branch_e17a9ffa", replaceInvalidDockerTagCharacters("2.0.56-branch+e17a9ffa"))
     }
 
     @Test

@@ -16,8 +16,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.jvm.tasks.Jar
 import org.gradle.testing.jacoco.plugins.JacocoPlugin
 import org.gradle.testing.jacoco.tasks.JacocoReport
-import org.sonarqube.gradle.SonarQubeExtension
-import org.sonarqube.gradle.SonarQubePlugin
 import java.io.File
 import java.nio.file.FileSystems
 
@@ -30,7 +28,6 @@ import java.nio.file.FileSystems
  * - declare a corporate Maven repository
  * - apply and configure the MavenPublishPlugin
  * - apply and configure the JacocoPlugin
- * - apply and configure the SonarQubePlugin
  *
  * For details see [README.md](../../../../../../../../../README.md).
  */
@@ -38,6 +35,18 @@ class CiPlugin : Plugin<Project> {
     private val fileSeparator = FileSystems.getDefault().separator
 
     override fun apply(project: Project) {
+        project.afterEvaluate {
+            val ciPluginExtension: CiPluginExtension? =
+                project.extensions.findByName(CiPluginExtension::class.simpleName!!) as? CiPluginExtension
+            if (!ciPluginExtension?.dockerArtifactFile?.isPresent!!) {
+                // The default value for dockerArtifactFile can only be set after the project.version has been set, but
+                // if the configuration value was explicitly set, we must not override it.
+                val jarTaskCollection: TaskCollection<Jar> = project.tasks.withType(Jar::class.java)
+                val jarTask = jarTaskCollection.findByName(JavaPlugin.JAR_TASK_NAME)
+                ciPluginExtension.dockerArtifactFile.set(stripPlain(jarTask?.archiveFileName?.orNull))
+            }
+        }
+
         project.logger.info("Applying the $CI_PLUGIN_TASK_GROUP (${CiPlugin::class.java.canonicalName})")
 
         createExtensionObjectWithDefaultValues(project)
@@ -49,13 +58,15 @@ class CiPlugin : Plugin<Project> {
         project.declareMavenRepository(configuration)
         project.setupMavenPublishPlugin(configuration)
         project.setupJacocoPlugin()
-        project.setupSonarQubePlugin()
     }
 
     /**
      * A project extension is the main mechanism to make a Gradle plugin configurable for users.
      */
     private fun createExtensionObjectWithDefaultValues(project: Project) {
+        val jarTaskCollection: TaskCollection<Jar> = project.tasks.withType(Jar::class.java)
+        val jarTask = jarTaskCollection.findByName(JavaPlugin.JAR_TASK_NAME)
+
         val ciPluginExtension =
             project.extensions.create(CiPluginExtension::class.simpleName!!, CiPluginExtension::class.java)
         ciPluginExtension.mavenRepositoryUrl.set(MAVEN_REPOSITORY_URL_DEFAULT)
@@ -63,6 +74,8 @@ class CiPlugin : Plugin<Project> {
         ciPluginExtension.mavenRepositoryUsername.set(MAVEN_REPOSITORY_USERNAME_DEFAULT)
         ciPluginExtension.mavenRepositoryPassword.set(MAVEN_REPOSITORY_PASSWORD_DEFAULT)
         ciPluginExtension.dockerRepository.set(DOCKER_REPOSITORY_DEFAULT)
+        ciPluginExtension.dockerArtifactSourceDirectory.set(jarTask?.destinationDirectory?.get().toString())
+        // dockerArtifactFile default must be set in afterEvaluate, because project.version is not yet set here by the semver plugin
     }
 
     private fun registerShowCiPluginConfigurationTask(
@@ -78,25 +91,20 @@ class CiPlugin : Plugin<Project> {
     }
 
     private fun registerDockerTasks(project: Project, configuration: Configuration) {
-        val jarTaskCollection: TaskCollection<Jar> = project.tasks.withType(Jar::class.java)
-        val jarTask = jarTaskCollection.findByName(JavaPlugin.JAR_TASK_NAME)
         val assembleTask = project.tasks.findByName(BasePlugin.ASSEMBLE_TASK_NAME)
 
         val dockerBuildImageWorkingDir = "${project.buildDir}$fileSeparator$DOCKER_SUBDIRECTORY"
 
-        // prepare
         val dockerPrepareContextTask = project.tasks.register(
             DOCKER_PREPARE_CONTEXT_TASK_NAME, Copy::class.java
         ) { dockerPrepareContextTask ->
             dockerPrepareContextTask.group = CI_PLUGIN_TASK_GROUP
             dockerPrepareContextTask.from("${project.projectDir}$fileSeparator$DOCKER_SUBDIRECTORY")
-            dockerPrepareContextTask.from(jarTask?.destinationDirectory)
-            dockerPrepareContextTask.exclude("*-plain.jar") // for Docker, we need only the full JAR  (can run standalone)
+            dockerPrepareContextTask.from(configuration.value(CiPluginExtension::dockerArtifactSourceDirectory))
             dockerPrepareContextTask.into(dockerBuildImageWorkingDir)
             dockerPrepareContextTask.description =
                 """Copies files from ${project.projectDir}$fileSeparator$DOCKER_SUBDIRECTORY
-                    and the build artifact
-                    ${jarTask?.destinationDirectory?.orNull}$fileSeparator${jarTask?.archiveBaseName?.orNull}[version].${jarTask?.archiveExtension?.orNull}
+                    and ${configuration.value(CiPluginExtension::dockerArtifactSourceDirectory)}
                     to working directory $dockerBuildImageWorkingDir
                     where the Docker image is built."""
         }
@@ -223,33 +231,21 @@ class CiPlugin : Plugin<Project> {
     private fun Project.setupJacocoPlugin() {
         project.plugins.apply(JacocoPlugin::class.java)
         project.tasks.withType(JacocoReport::class.java).configureEach { jacocoTestReportTask ->
-            jacocoTestReportTask.reports.xml.required.set(false) // xml.enabled false
-            jacocoTestReportTask.reports.csv.required.set(false) // csv.enabled false
-            jacocoTestReportTask.reports.html.outputLocation.set(
-                project.layout.buildDirectory.dir(
-                    JACOCO_OUTPUT_SUBDIRECTORY
-                )
-            )
+            jacocoTestReportTask.reports.html.required.set(true) // HTML for human inspection
+            jacocoTestReportTask.reports.xml.required.set(true) // XML for SonarQube
+            jacocoTestReportTask.reports.csv.required.set(false) // CSV not needed
             jacocoTestReportTask.dependsOn(tasks.getByName(JavaPlugin.TEST_TASK_NAME))
         }
     }
+}
 
-    private fun Project.setupSonarQubePlugin() {
-        // use SonarQubePlugin only on the root project, not on subprojects of multi-project builds
-        if (!project.equals(rootProject)) {
-            return
-        }
-        rootProject.plugins.apply(SonarQubePlugin::class.java)
-
-        val sonarQubeExtension = rootProject.extensions.getByType(SonarQubeExtension::class.java)
-        sonarQubeExtension.properties { sonarQubeProperties ->
-            sonarQubeProperties.property("sonar.projectName", rootProject.name)
-            sonarQubeProperties.property("sonar.description", "${rootProject.description}")
-            sonarQubeProperties.property("sonar.rootProjectVersion", "${rootProject.version}")
-            sonarQubeProperties.property(
-                "sonar.jacoco.reportPaths",
-                "${rootProject.layout.buildDirectory.dir(JACOCO_OUTPUT_SUBDIRECTORY).orNull}"
-            )
-        }
-    }
+/**
+ * Since Spring Boot 2.5.0 two JAR archives are created by default. One is the fat JAR that can be run on its own
+ * because it contains all module dependencies in addition to the application's classes and resources. The other one is
+ * a thin JAR which has `-plain` in the name, for example `myapp-plain.jar`. To create Docker images of microservices we
+ * want the fat JAR. This method makes sure that we use the correct name by removing the `-plain` part from the
+ * [providedArtifactPath] if necessary.
+ */
+fun stripPlain(providedArtifactPath: String?): String? {
+    return providedArtifactPath?.replace("-plain.jar", ".jar")
 }

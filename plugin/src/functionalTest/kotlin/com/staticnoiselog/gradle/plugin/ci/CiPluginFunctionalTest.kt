@@ -33,7 +33,9 @@ class CiPluginFunctionalTest {
         ${CiPluginExtension::mavenRepositoryName.name}.set("${CiPluginExtension::mavenRepositoryName.name}$FROM_BUILD_SCRIPT")
         ${CiPluginExtension::mavenRepositoryUsername.name}.set("${CiPluginExtension::mavenRepositoryUsername.name}$FROM_BUILD_SCRIPT")
         ${CiPluginExtension::mavenRepositoryPassword.name}.set("${CiPluginExtension::mavenRepositoryPassword.name}$FROM_BUILD_SCRIPT")
-        dockerRepository.set("dockerRepository$FROM_BUILD_SCRIPT")
+        ${CiPluginExtension::dockerRepository.name}.set("${CiPluginExtension::dockerRepository.name}$FROM_BUILD_SCRIPT")
+        ${CiPluginExtension::dockerArtifactSourceDirectory.name}.set("${CiPluginExtension::dockerArtifactSourceDirectory.name}$FROM_BUILD_SCRIPT")
+        ${CiPluginExtension::dockerArtifactFile.name}.set("${CiPluginExtension::dockerArtifactFile.name}$FROM_BUILD_SCRIPT")
     }
     """
 
@@ -48,7 +50,9 @@ class CiPluginFunctionalTest {
         $PROPERTY_PREFIX${CiPluginExtension::mavenRepositoryName.name}=$PROPERTY_PREFIX${CiPluginExtension::mavenRepositoryName.name}$FROM_GRADLE_PROPERTIES
         $PROPERTY_PREFIX${CiPluginExtension::mavenRepositoryUsername.name}=$PROPERTY_PREFIX${CiPluginExtension::mavenRepositoryUsername.name}$FROM_GRADLE_PROPERTIES
         $PROPERTY_PREFIX${CiPluginExtension::mavenRepositoryPassword.name}=$PROPERTY_PREFIX${CiPluginExtension::mavenRepositoryPassword.name}$FROM_GRADLE_PROPERTIES
-        ${PROPERTY_PREFIX}dockerRepository=${PROPERTY_PREFIX}dockerRepository$FROM_GRADLE_PROPERTIES
+        $PROPERTY_PREFIX${CiPluginExtension::dockerRepository.name}=$PROPERTY_PREFIX${CiPluginExtension::dockerRepository.name}$FROM_GRADLE_PROPERTIES
+        $PROPERTY_PREFIX${CiPluginExtension::dockerArtifactSourceDirectory.name}=$PROPERTY_PREFIX${CiPluginExtension::dockerArtifactSourceDirectory.name}$FROM_GRADLE_PROPERTIES
+        $PROPERTY_PREFIX${CiPluginExtension::dockerArtifactFile.name}=$PROPERTY_PREFIX${CiPluginExtension::dockerArtifactFile.name}$FROM_GRADLE_PROPERTIES
     """
 
     @field:TempDir
@@ -83,9 +87,6 @@ class CiPluginFunctionalTest {
 
         // JacocoPlugin applied?
         assertTrue(result.output.contains("jacocoTestReport "))
-
-        // SonarQubePlugin applied?
-        assertTrue(result.output.contains("sonarqube "))
     }
 
     @Test
@@ -123,6 +124,8 @@ class CiPluginFunctionalTest {
             CiPluginExtension::mavenRepositoryPassword.name + FROM_BUILD_SCRIPT, PASSWORD_MASKED_TEXT, result
         )
         assertValueInOutput(CiPluginExtension::dockerRepository.name + FROM_BUILD_SCRIPT, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactSourceDirectory.name + FROM_BUILD_SCRIPT, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactFile.name + FROM_BUILD_SCRIPT, result)
     }
 
     @Test
@@ -151,6 +154,8 @@ class CiPluginFunctionalTest {
         assertValueInOutput(CiPluginExtension::mavenRepositoryUrl.name + FROM_BUILD_SCRIPT, result)
         assertValueInOutput(CiPluginExtension::mavenRepositoryName.name + FROM_BUILD_SCRIPT, result)
         assertValueInOutput(CiPluginExtension::dockerRepository.name + FROM_BUILD_SCRIPT, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactSourceDirectory.name + FROM_BUILD_SCRIPT, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactFile.name + FROM_BUILD_SCRIPT, result)
     }
 
     @Test
@@ -178,6 +183,8 @@ class CiPluginFunctionalTest {
             CiPluginExtension::mavenRepositoryPassword.name + FROM_GRADLE_PROPERTIES, PASSWORD_MASKED_TEXT, result
         )
         assertValueInOutput(CiPluginExtension::dockerRepository.name + FROM_GRADLE_PROPERTIES, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactSourceDirectory.name + FROM_GRADLE_PROPERTIES, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactFile.name + FROM_GRADLE_PROPERTIES, result)
 
         // nothing from extension object in build.gradle.kts
         assertFalse(result.output.contains(FROM_BUILD_SCRIPT))
@@ -223,6 +230,8 @@ class CiPluginFunctionalTest {
         assertValueInOutput(CiPluginExtension::mavenRepositoryUrl.name + FROM_BUILD_SCRIPT, result)
         assertValueInOutput(CiPluginExtension::mavenRepositoryName.name + FROM_BUILD_SCRIPT, result)
         assertValueInOutput(CiPluginExtension::dockerRepository.name + FROM_BUILD_SCRIPT, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactSourceDirectory.name + FROM_BUILD_SCRIPT, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactFile.name + FROM_BUILD_SCRIPT, result)
     }
 
     @Test
@@ -250,6 +259,8 @@ class CiPluginFunctionalTest {
             "-P$PROPERTY_PREFIX${CiPluginExtension::mavenRepositoryUsername.name}=${CiPluginExtension::mavenRepositoryUsername.name}$FROM_COMMAND_LINE",
             "-P$PROPERTY_PREFIX${CiPluginExtension::mavenRepositoryPassword.name}=${CiPluginExtension::mavenRepositoryPassword.name}$FROM_COMMAND_LINE",
             "-P$PROPERTY_PREFIX${CiPluginExtension::dockerRepository.name}=${CiPluginExtension::dockerRepository.name}$FROM_COMMAND_LINE",
+            "-P$PROPERTY_PREFIX${CiPluginExtension::dockerArtifactSourceDirectory.name}=${CiPluginExtension::dockerArtifactSourceDirectory.name}$FROM_COMMAND_LINE",
+            "-P$PROPERTY_PREFIX${CiPluginExtension::dockerArtifactFile.name}=${CiPluginExtension::dockerArtifactFile.name}$FROM_COMMAND_LINE",
             SHOW_CI_PLUGIN_CONFIGURATION_TASK_NAME
         )
 
@@ -261,6 +272,8 @@ class CiPluginFunctionalTest {
             CiPluginExtension::mavenRepositoryPassword.name + FROM_COMMAND_LINE, PASSWORD_MASKED_TEXT, result
         )
         assertValueInOutput(CiPluginExtension::dockerRepository.name + FROM_COMMAND_LINE, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactSourceDirectory.name + FROM_COMMAND_LINE, result)
+        assertValueInOutput(CiPluginExtension::dockerArtifactFile.name + FROM_COMMAND_LINE, result)
 
         // nothing from extension object in build.gradle.kts
         assertFalse(result.output.contains(FROM_BUILD_SCRIPT))

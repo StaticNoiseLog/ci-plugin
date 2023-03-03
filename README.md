@@ -7,7 +7,6 @@ This Gradle plugin supports continuous integration for projects in a corporate e
 - Applies and configures these Gradle plugins:
   * [Maven Publish Plugin](https://docs.gradle.org/current/userguide/publishing_maven.html)
   * [JaCoCo Plugin](https://docs.gradle.org/current/userguide/jacoco_plugin.html)
-  * [SonarQube Plugin](https://docs.sonarqube.org/latest/analysis/scan/sonarscanner-for-gradle/)
 - Adds a set of custom tasks for creating a Docker image from the JAR artifact produced by the Gradle build
 
 **The purpose of the CI plugin is to provide what is needed for continuous integration and otherwise stay out of the way
@@ -19,8 +18,7 @@ pipeline.
 Versions
 --------
 - JDK: 11
-- Gradle: 8.0
-- SonarQube plugin: 3.3
+- Gradle: 8.0.1
 - Kotlin 1.8.10
 
 Usage
@@ -28,7 +26,7 @@ Usage
 To use this plugin, add it to the "plugins" section of `build.gradle.kts`:
 ```
 plugins {
-    id("io.github.staticnoiselog.ci") version "1.0.1"
+    id("io.github.staticnoiselog.ci") version "1.1.0"
 }
 ```
 
@@ -143,22 +141,13 @@ accessed with the credentials `mavenRepositoryUsername`/`mavenRepositoryPassword
 JaCoCo Plugin
 -------------
 The core Gradle plugin [JaCoCo Plugin](https://docs.gradle.org/current/userguide/jacoco_plugin.html) is added so that
-the CI pipeline can provide coverage metrics to a SonarQube server.
+the CI pipeline can provide coverage metrics to a SonarQube server. It is configured as follows:
 
-Output is directed to the `build/jacoco` directory of the project. By design, this output directory is *not*
-configurable (order over chaos).
-
-SonarQube Plugin
-----------------
-Version 3.3 of the [SonarQube Plugin](https://docs.sonarqube.org/latest/analysis/scan/sonarscanner-for-gradle/) is added
-so that the CI pipeline can integrate a corporate SonarQube server for code analysis.
-
-The SonarQube plugin configuration is as follows and *cannot* be changed (order over chaos):
-
-    sonar.projectName = rootProject.name
-    sonar.description = rootProject.description
-    sonar.rootProjectVersion = rootProject.version
-    sonar.jacoco.reportPaths = build/jacoco
+- HTML reports required (for humans)
+- XML reports required (for SonarQube)
+- CSV reports not required
+- The `jacocoTestReport` task depends on the `JavaPlugin.TEST_TASK_NAME` to ensure that the "test" task has been
+ executed before `jacocoTestReport` is run.
 
 Docker Tasks
 ------------
@@ -194,6 +183,38 @@ takes precedence if it exists):
 ```
 configure<com.staticnoiselog.gradle.plugin.ci.CiPluginExtension> {
     dockerRepository.set("nwb-docker-local.bin.acme.com")
+}
+```
+
+### Configuring Source Directory and Name of the Artifact for the Docker Image ###
+Creation of the Docker image can be customized with two configuration value:
+
+- `dockerArtifactSourceDirectory` is the directory where the `dockerPrepareContext` tasks looks for the artifact to be 
+  deployed as a Docker image. The default is the standard build directory (something like `..\build\libs`). All files
+  from this directory are made available for building the Docker image. It is up to the application's `Docker` file
+  which ones it will use.
+- `dockerArtifactFile` is a string used to set the environment variable ARTIFACT_FILE in the Docker image created by
+  the task `dockerBuildImage`. The default is the standard Spring Boot fat JAR filename (something like "my-service.jar").
+
+If you want to build Docker images for something else than regular Spring Boot artifacts, it may be necessary to set
+these two configuration values. Like with the other configuration values, there are three ways to do this:
+
+As Gradle properties (with prefix `plugin.ci.`) in a `gradle.properties` file:
+
+    plugin.ci.dockerArtifactSourceDirectory=./build/libs/dist
+    plugin.ci.dockerArtifactFile=run-tests.sh
+
+Or as a Gradle property on the command line (overrides values from `gradle.propeties`):
+
+    ./gradlew -Pplugin.ci.dockerArtifactSourceDirectory=./build/libs/dist ...
+    ./gradlew -Pplugin.ci.dockerArtifactFile=run-tests.sh ...
+
+Or in the plugin's extension object in `build.gradle.kts` (note that the Gradle properties
+`plugin.ci.dockerArtifactSourceDirectory` and `plugin.ci.dockerArtifactFile` take precedence if any of them exists):
+```
+configure<com.staticnoiselog.gradle.plugin.ci.CiPluginExtension> {
+    dockerArtifactSourceDirectory.set("project.buildDir.name + '/dist")
+    dockerArtifactFile.set("run-tests.sh")
 }
 ```
 
@@ -260,3 +281,5 @@ These are the steps for creating an official new version of the CI plugin:
 - commit and push to Git
 - publish the plugin (normally to the [Gradle Plugin Portal](https://docs.gradle.org/current/userguide/publishing_gradle_plugins.html#publish_your_plugin_to_the_plugin_portal))
 - `./gradlew tagHeadCommit pushTagOrigin` (add the semver version tag and push it to the remote Git repository)
+
+When working with feature branches, the command `git tag --sort=taggerdate` is useful in conjunction with the semver-plugin.

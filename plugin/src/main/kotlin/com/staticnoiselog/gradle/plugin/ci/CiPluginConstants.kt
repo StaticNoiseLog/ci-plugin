@@ -18,5 +18,3 @@ const val TEST_JAR_TASK_NAME = "testJar"
 const val CLASSIFIER_TEST = "test"
 const val TEST_SOURCE_JAR_TASK_NAME = "testSourceJar"
 const val CLASSIFIER_TEST_SOURCES = "test-sources"
-
-const val JACOCO_OUTPUT_SUBDIRECTORY = "jacoco"
