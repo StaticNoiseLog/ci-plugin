@@ -45,18 +45,20 @@ class CiPlugin : Plugin<Project> {
                 val jarTask = jarTaskCollection.findByName(JavaPlugin.JAR_TASK_NAME)
                 ciPluginExtension.dockerArtifactFile.set(stripPlain(jarTask?.archiveFileName?.orNull))
             }
+
+            // The final configuration values from CiPluginExtension are only available once Gradle's configuration
+            // phase has completed. Therefore, the following setups cannot be done earlier. And not all places where
+            // configuration values must be set will accept a Gradle Provider, which would be another solution.
+            val configuration = Configuration(project)
+            registerDockerTasks(project, configuration)
+            project.declareMavenRepository(configuration)
+            project.setupMavenPublishPlugin(configuration)
         }
 
         project.logger.info("Applying the $CI_PLUGIN_TASK_GROUP (${CiPlugin::class.java.canonicalName})")
 
         createExtensionObjectWithDefaultValues(project)
-        val configuration = Configuration(project)
-        registerShowCiPluginConfigurationTask(project, configuration)
-
-        registerDockerTasks(project, configuration)
-
-        project.declareMavenRepository(configuration)
-        project.setupMavenPublishPlugin(configuration)
+        registerShowCiPluginConfigurationTask(project)
         project.setupJacocoPlugin()
     }
 
@@ -78,9 +80,8 @@ class CiPlugin : Plugin<Project> {
         // dockerArtifactFile default must be set in afterEvaluate, because project.version is not yet set here by the semver plugin
     }
 
-    private fun registerShowCiPluginConfigurationTask(
-        project: Project, configuration: Configuration
-    ) {
+    private fun registerShowCiPluginConfigurationTask(project: Project) {
+        val configuration = Configuration(project)
         project.tasks.register(
             SHOW_CI_PLUGIN_CONFIGURATION_TASK_NAME, ShowCiPluginConfigurationTask::class.java
         ) { showCiPluginConfigurationTask ->
@@ -100,7 +101,7 @@ class CiPlugin : Plugin<Project> {
         ) { dockerPrepareContextTask ->
             dockerPrepareContextTask.group = CI_PLUGIN_TASK_GROUP
             dockerPrepareContextTask.from("${project.projectDir}$fileSeparator$DOCKER_SUBDIRECTORY")
-            dockerPrepareContextTask.from(configuration.value(CiPluginExtension::dockerArtifactSourceDirectory))
+            dockerPrepareContextTask.from(project.providers.provider { configuration.value(CiPluginExtension::dockerArtifactSourceDirectory) })
             dockerPrepareContextTask.into(dockerBuildImageWorkingDir)
             dockerPrepareContextTask.description =
                 """Copies files from ${project.projectDir}$fileSeparator$DOCKER_SUBDIRECTORY

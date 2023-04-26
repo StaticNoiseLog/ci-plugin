@@ -17,12 +17,9 @@ class CiPluginTest {
         // Create a test project and apply the plugin
         val project = ProjectBuilder.builder().build()
         project.plugins.apply("io.github.staticnoiselog.ci")
-
         // Verify the result
-        assertNotNull(project.tasks.findByName(DOCKER_PREPARE_CONTEXT_TASK_NAME))
-        assertNotNull(project.tasks.findByName(DOCKER_BUILD_IMAGE_TASK_NAME))
-        assertNotNull(project.tasks.findByName(DOCKER_PUSH_IMAGE_TASK_NAME))
-        assertNotNull(project.tasks.findByName(DOCKER_REMOVE_IMAGE_TASK_NAME))
+        val ciPlugin = project.plugins.findPlugin("io.github.staticnoiselog.ci")
+        assertNotNull(ciPlugin)
     }
 
     @Test

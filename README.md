@@ -18,7 +18,7 @@ pipeline.
 Versions
 --------
 - JDK: 11
-- Gradle: 8.0.1
+- Gradle: 8.1.1
 - Kotlin 1.8.10
 
 Usage
@@ -210,12 +210,19 @@ Or as a Gradle property on the command line (overrides values from `gradle.prope
     ./gradlew -Pplugin.ci.dockerArtifactFile=run-tests.sh ...
 
 Or in the plugin's extension object in `build.gradle.kts` (note that the Gradle properties
-`plugin.ci.dockerArtifactSourceDirectory` and `plugin.ci.dockerArtifactFile` take precedence if any of them exists):
+`plugin.ci.dockerArtifactSourceDirectory` and `plugin.ci.dockerArtifactFile` take precedence if any of them exists).
+Kotlin example:
 ```
 configure<com.staticnoiselog.gradle.plugin.ci.CiPluginExtension> {
-    dockerArtifactSourceDirectory.set("project.buildDir.name + '/dist")
+    dockerArtifactSourceDirectory.set(project.buildDir.name + File.separator + "dist")
     dockerArtifactFile.set("run-tests.sh")
 }
+```
+Groovy example:
+```
+def ciPluginExtension = project.extensions.getByName("CiPluginExtension")
+ciPluginExtension.dockerArtifactSourceDirectory = buildDir.path + File.separator + 'dist'
+ciPluginExtension.dockerArtifactFile = war.archiveFileName
 ```
 
 Displaying the Current Configuration
